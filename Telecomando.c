@@ -138,13 +138,13 @@ void interrupt() iv 0x0004 ics ICS_OFF
     RBIF_bit = 0;
 }
 
-static void trasmetti(unsigned int code)
+static void trasmetti(unsigned int ir_code)
 {
     unsigned char i;
 
     for (i = 0; i < IR_BITS; i++)
     {
-        if (code & IR_MSB_MASK)
+        if (ir_code & IR_MSB_MASK)
         {
             uno();
         }
@@ -152,7 +152,7 @@ static void trasmetti(unsigned int code)
         {
             zero();
         }
-        code = code << 1;
+        ir_code = ir_code << 1;
     }
 
     delay_ms(64);

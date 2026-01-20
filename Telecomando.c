@@ -18,6 +18,7 @@
 
 #define IR_BITS         12
 #define IR_MSB_MASK     0b100000000000
+#define DEBOUNCE_MS     5
 
 sbit anodo  at RA2_bit; // to be reassigned if needed
 sbit l1l2   at RB4_bit;
@@ -27,9 +28,10 @@ sbit vol    at RB7_bit;
 
 sbit TRISanodo at TRISA2_bit;
 
-static void trasmetti(unsigned int code);
+static void trasmetti(unsigned int ir_code);
 static void uno(void);
 static void zero(void);
+static bit read_ra1_stable(void);
 
 void main()
 {
@@ -57,8 +59,17 @@ void main()
 
 void interrupt() iv 0x0004 ics ICS_OFF
 {
+    unsigned char portb_snapshot;
+
+    portb_snapshot = PORTB; // clear PORTB mismatch condition
+
     while (l1l2 == PIN_ACTIVE)
     {
+        delay_ms(DEBOUNCE_MS);
+        if (l1l2 != PIN_ACTIVE)
+        {
+            break;
+        }
         RA0_bit = 1;
         delay_us(5);
         if (l1l2 == PIN_INACTIVE)
@@ -75,6 +86,11 @@ void interrupt() iv 0x0004 ics ICS_OFF
 
     while (l3l4 == PIN_ACTIVE)
     {
+        delay_ms(DEBOUNCE_MS);
+        if (l3l4 != PIN_ACTIVE)
+        {
+            break;
+        }
         RA0_bit = 1;
         delay_us(5);
         if (l3l4 == PIN_INACTIVE)
@@ -91,6 +107,11 @@ void interrupt() iv 0x0004 ics ICS_OFF
 
     while (l5mute == PIN_ACTIVE)
     {
+        delay_ms(DEBOUNCE_MS);
+        if (l5mute != PIN_ACTIVE)
+        {
+            break;
+        }
         RA0_bit = 1;
         delay_us(5);
         if (l5mute == PIN_INACTIVE)
@@ -108,6 +129,11 @@ void interrupt() iv 0x0004 ics ICS_OFF
 
     while (vol == PIN_ACTIVE)
     {
+        delay_ms(DEBOUNCE_MS);
+        if (vol != PIN_ACTIVE)
+        {
+            break;
+        }
         RA0_bit = 1;
         delay_us(5);
         if (vol == PIN_INACTIVE)
@@ -117,8 +143,7 @@ void interrupt() iv 0x0004 ics ICS_OFF
         if (vol == PIN_ACTIVE)
         {
             RA0_bit = 0;
-            TRISA1_bit = 1;
-            if (RA1_bit == 0)
+            if (read_ra1_stable())
             {
                 trasmetti(IR_CODE_STBY);
                 delay_ms(1000);
@@ -136,6 +161,25 @@ void interrupt() iv 0x0004 ics ICS_OFF
 
     anodo = IR_OFF;
     RBIF_bit = 0;
+}
+
+static bit read_ra1_stable(void)
+{
+    bit sample1;
+    bit sample2;
+
+    TRISA1_bit = 1;
+    delay_us(10);
+    sample1 = RA1_bit;
+    delay_us(10);
+    sample2 = RA1_bit;
+    TRISA1_bit = 0;
+
+    if ((sample1 == 0) && (sample2 == 0))
+    {
+        return 1;
+    }
+    return 0;
 }
 
 static void trasmetti(unsigned int ir_code)

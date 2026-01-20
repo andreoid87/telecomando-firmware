@@ -12,5 +12,6 @@
 *.lst.ini
 *.mcppi_callertable.txt
 *.asm
+*.asm.old
 *_callertable.txt
 *.user.dic

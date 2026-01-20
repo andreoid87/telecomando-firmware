@@ -31,7 +31,7 @@ sbit TRISanodo at TRISA2_bit;
 static void trasmetti(unsigned int ir_code);
 static void uno(void);
 static void zero(void);
-static bit read_ra1_stable(void);
+static unsigned char read_ra1_stable(void);
 
 void main()
 {
@@ -143,7 +143,7 @@ void interrupt() iv 0x0004 ics ICS_OFF
         if (vol == PIN_ACTIVE)
         {
             RA0_bit = 0;
-            if (read_ra1_stable())
+            if (read_ra1_stable() != 0)
             {
                 trasmetti(IR_CODE_STBY);
                 delay_ms(1000);
@@ -163,10 +163,10 @@ void interrupt() iv 0x0004 ics ICS_OFF
     RBIF_bit = 0;
 }
 
-static bit read_ra1_stable(void)
+static unsigned char read_ra1_stable(void)
 {
-    bit sample1;
-    bit sample2;
+    unsigned char sample1;
+    unsigned char sample2;
 
     TRISA1_bit = 1;
     delay_us(10);
